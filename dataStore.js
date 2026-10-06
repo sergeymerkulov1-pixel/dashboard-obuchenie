@@ -104,7 +104,7 @@ const DEFAULT_DATA = {
   ],
   settings: {
     adminUser: 'admin',
-    adminPassHash: null, // задаётся при первом запуске из ADMIN_PASSWORD (по умолчанию admin2026) и хранится как хеш
+    adminPassHash: null, // задаётся при первом запуске из ADMIN_PASSWORD (если не задан — генерируется случайный и печатается в лог) и хранится как хеш
     autoSnapshotSchedule: '0 7 * * 3',
     autoSnapshotDescription: 'По средам в 07:00 МСК'
   }
@@ -170,7 +170,12 @@ class DataStore {
     // ADMIN_PASSWORD в окружении задаёт (или меняет) пароль: при расхождении хеш пересчитывается
     const envPass = process.env.ADMIN_PASSWORD;
     if (!isPasswordHash(st.adminPassHash)) {
-      st.adminPassHash = hashPassword(envPass || st.adminPassHash || 'admin2026');
+      let initialPass = envPass || st.adminPassHash;
+      if (!initialPass) {
+        initialPass = crypto.randomBytes(9).toString('base64url');
+        console.log(`🔐 ADMIN_PASSWORD не задан. Временный пароль администратора (admin): ${initialPass}`);
+      }
+      st.adminPassHash = hashPassword(initialPass);
       changed = true;
     } else if (envPass && !verifyPassword(envPass, st.adminPassHash)) {
       st.adminPassHash = hashPassword(envPass);
