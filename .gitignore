@@ -10,3 +10,4 @@ feedback/
 ~$*
 *.log
 .DS_Store
+data.json
