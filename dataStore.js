@@ -158,7 +158,8 @@ class DataStore {
     this.virtualProviders = [];
     this.migrateSecrets();
     this.migrateUsers();
-    this.migrateSeedSnapshots();
+    // миграция условных срезов отключена: история срезов нужна в «Динамике»
+    // this.migrateSeedSnapshots();
   }
 
   // Пароль — только хеш; ключ GigaChat — только из окружения (GIGACHAT_CREDENTIALS).
