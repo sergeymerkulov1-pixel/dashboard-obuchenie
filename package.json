@@ -1,0 +1,16 @@
+{
+  "name": "study-department-dashboard",
+  "version": "1.0.0",
+  "description": "Дашборд учебного отдела - мониторинг план-факта обучения",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "multer": "^2.4.0",
+    "node-cron": "^4.6.0",
+    "xlsx": "^0.18.5"
+  }
+}

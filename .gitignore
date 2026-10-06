@@ -1,0 +1,13 @@
+﻿node_modules/
+.env
+.claude/
+data.json
+data.backup-*.json
+Статусы/
+Отчет презентация неделя/
+feedback/
+*.xlsx
+*.pptx
+~$*
+*.log
+.DS_Store

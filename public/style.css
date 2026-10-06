@@ -1,0 +1,368 @@
+/* Специфические стили дашборда Dashboards V3 */
+
+body {
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #f4f6fb;
+  color: #1e293b;
+}
+
+/* ================= БОКОВОЙ САЙДБАР RAIL ================= */
+.sidebar-rail {
+  box-shadow: 0 20px 40px -15px rgba(67, 56, 202, 0.4);
+}
+
+.nav-rail-btn {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.7);
+  background: transparent;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.nav-rail-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.nav-rail-btn.active {
+  background: #ffffff;
+  color: #4338ca;
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2);
+}
+
+.nav-rail-btn .tooltip {
+  position: absolute;
+  left: 64px;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: all 0.2s ease;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  z-index: 50;
+}
+
+.nav-rail-btn:hover .tooltip {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ================= ВЕРХНИЕ ПИЛЮЛИ НАВИГАЦИИ ================= */
+.tab-pill {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.tab-pill.active {
+  background-color: #eef2ff;
+  color: #4f46e5;
+  box-shadow: 0 1px 2px 0 rgba(79, 70, 229, 0.1);
+}
+
+/* ================= ЧИПЫ ФИЛЬТРОВ ГРАФИКА ================= */
+.filter-chip {
+  padding: 4px 10px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 11px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.filter-chip:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.filter-chip.active {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #ffffff;
+  box-shadow: 0 2px 8px -2px rgba(79, 70, 229, 0.4);
+}
+
+/* ================= BENTO KPI КАРТОЧКИ ================= */
+.kpi-bento-card {
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  padding: 20px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 190px;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+}
+
+.kpi-bento-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.06), 0 4px 10px -4px rgba(0, 0, 0, 0.03);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* Бейдж ручных правок */
+.badge-override-pill {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Анимация приветствия руки */
+@keyframes waveHand {
+  0%, 100% { transform: rotate(0deg); }
+  20%, 60% { transform: rotate(14deg); }
+  40%, 80% { transform: rotate(-14deg); }
+}
+
+.animate-wave {
+  display: inline-block;
+  transform-origin: 70% 70%;
+  animation: waveHand 2.5s infinite;
+}
+
+/* Плавный скроллбар */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ================= РЕЖИМ ПЛАНЁРКИ ДЛЯ ПРОЕКТОРА ================= */
+body.meeting-mode .sidebar-rail {
+  display: none !important;
+}
+body.meeting-mode #mainContentContainer {
+  margin-left: 0 !important;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 16px !important;
+}
+body.meeting-mode header,
+body.meeting-mode #adminBar,
+body.meeting-mode .admin-only,
+body.meeting-mode .edit-indicator-btn,
+body.meeting-mode #widgetGigaChat,
+body.meeting-mode .meeting-mode-hide {
+  display: none !important;
+}
+body.meeting-mode #meetingModeHeader {
+  display: flex !important;
+}
+
+/* Печать для проектора / PDF */
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+  .sidebar-rail,
+  header,
+  #adminBar,
+  #meetingModeHeader,
+  #widgetGigaChat,
+  .meeting-mode-hide,
+  button {
+    display: none !important;
+  }
+  #mainContentContainer {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+}
+
+/* ================= АДАПТИВНОСТЬ НА МОБИЛЬНЫХ (375PX) ================= */
+@media (max-width: 768px) {
+  .sidebar-rail {
+    display: none !important;
+  }
+  #mainContentContainer {
+    margin-left: 0 !important;
+    padding: 12px 10px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden;
+  }
+  .kpi-bento-card {
+    min-height: auto;
+    padding: 16px;
+  }
+  #blockTable .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    margin-left: -4px;
+    margin-right: -4px;
+  }
+  #blockTable table {
+    min-width: 860px;
+  }
+  #timelineChips {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 420px) {
+  #chartFilterChips {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  #aiChatBox {
+    width: 95vw !important;
+    right: 2.5vw !important;
+  }
+}
+
+/* Отметка нормы на полосе прогресса */
+.norm-marker {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background-color: #0f172a;
+  z-index: 20;
+  border-radius: 1px;
+}
+.norm-marker-label {
+  position: absolute;
+  top: -16px;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  white-space: nowrap;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* План-график: сетка месяцев на дорожке группы */
+.gantt-track {
+  background-image: repeating-linear-gradient(to right, #eef2f7 0, #eef2f7 1px, transparent 1px, transparent calc(100% / 12));
+}
+.gantt-bar {
+  transition: filter 0.15s ease, opacity 0.15s ease;
+}
+.gantt-bar:hover {
+  filter: brightness(0.92);
+}
+
+/* ================= ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ ================= */
+.theme-icon-dark { display: none; }
+html.dark .theme-icon-dark { display: inline-block; }
+html.dark .theme-icon-light { display: none; }
+
+/* ================= ТЁМНАЯ ТЕМА ================= */
+html.dark { color-scheme: dark; }
+html.dark body { background-color: #0b1120 !important; color: #e2e8f0; }
+
+/* Фоны */
+html.dark .bg-white { background-color: #111827 !important; }
+html.dark .bg-white\/80, html.dark .bg-slate-100\/90 { background-color: rgba(17, 24, 39, 0.85) !important; }
+html.dark .bg-slate-50, html.dark .bg-slate-50\/50 { background-color: #1a2336 !important; }
+html.dark .bg-slate-100 { background-color: #1e293b !important; }
+html.dark .bg-indigo-50, html.dark .bg-indigo-50\/40 { background-color: rgba(99, 102, 241, 0.16) !important; }
+html.dark .bg-indigo-100 { background-color: rgba(99, 102, 241, 0.26) !important; }
+html.dark .bg-emerald-50, html.dark .bg-teal-50 { background-color: rgba(16, 185, 129, 0.14) !important; }
+html.dark .bg-amber-50, html.dark .bg-amber-50\/60 { background-color: rgba(245, 158, 11, 0.14) !important; }
+html.dark .bg-amber-100 { background-color: rgba(245, 158, 11, 0.22) !important; }
+html.dark .bg-rose-50, html.dark .bg-rose-50\/60 { background-color: rgba(244, 63, 94, 0.14) !important; }
+html.dark .bg-rose-100 { background-color: rgba(244, 63, 94, 0.22) !important; }
+html.dark .hover\:bg-slate-50:hover { background-color: #1e293b !important; }
+html.dark .hover\:bg-slate-100:hover, html.dark .hover\:bg-slate-200:hover { background-color: #273449 !important; }
+html.dark .hover\:bg-indigo-50:hover, html.dark .hover\:bg-indigo-50\/40:hover,
+html.dark .hover\:bg-indigo-50\/60:hover, html.dark .hover\:bg-indigo-100:hover { background-color: rgba(99, 102, 241, 0.24) !important; }
+html.dark .hover\:bg-emerald-100:hover { background-color: rgba(16, 185, 129, 0.24) !important; }
+html.dark .hover\:bg-rose-50:hover { background-color: rgba(244, 63, 94, 0.2) !important; }
+
+/* Текст */
+html.dark .text-slate-900, html.dark .text-slate-800 { color: #f1f5f9 !important; }
+html.dark .text-slate-700 { color: #e2e8f0 !important; }
+html.dark .text-slate-600 { color: #cbd5e1 !important; }
+html.dark .text-slate-500 { color: #94a3b8 !important; }
+html.dark .text-slate-400 { color: #7c8ba1 !important; }
+html.dark .text-slate-300 { color: #475569 !important; }
+html.dark .text-indigo-600, html.dark .text-indigo-700, html.dark .text-indigo-900, html.dark .text-indigo-950 { color: #a5b4fc !important; }
+html.dark .text-emerald-600, html.dark .text-emerald-700, html.dark .text-emerald-800 { color: #6ee7b7 !important; }
+html.dark .text-teal-700 { color: #5eead4 !important; }
+html.dark .text-rose-600, html.dark .text-rose-700, html.dark .text-rose-800, html.dark .hover\:text-rose-900:hover { color: #fda4af !important; }
+html.dark .text-amber-700, html.dark .text-amber-800, html.dark .text-amber-900 { color: #fcd34d !important; }
+html.dark .text-purple-800, html.dark .text-blue-800 { color: #c4b5fd !important; }
+html.dark .hover\:text-slate-600:hover, html.dark .hover\:text-slate-800:hover { color: #f1f5f9 !important; }
+html.dark .hover\:text-indigo-600:hover, html.dark .hover\:text-indigo-700:hover, html.dark .hover\:text-indigo-800:hover { color: #c7d2fe !important; }
+html.dark .bg-indigo-600.text-white, html.dark .bg-emerald-600.text-white { color: #ffffff !important; }
+html.dark input, html.dark select, html.dark textarea { color: #e2e8f0; }
+html.dark select option { background: #111827; color: #e2e8f0; }
+html.dark ::placeholder { color: #64748b !important; }
+
+/* Границы */
+html.dark .border-slate-100, html.dark .border-slate-100\/60, html.dark .border-slate-200,
+html.dark .border-slate-200\/70, html.dark .border-slate-200\/80 { border-color: #263248 !important; }
+html.dark .divide-slate-100 > :not(:last-child), html.dark .divide-slate-50 > :not(:last-child) { border-color: #263248 !important; }
+html.dark .border-rose-200, html.dark .border-rose-200\/90 { border-color: rgba(244, 63, 94, 0.35) !important; }
+html.dark .border-amber-200 { border-color: rgba(245, 158, 11, 0.35) !important; }
+html.dark .border-indigo-200, html.dark .border-indigo-200\/80, html.dark .border-indigo-300 { border-color: rgba(99, 102, 241, 0.4) !important; }
+html.dark .border-emerald-200\/80 { border-color: rgba(16, 185, 129, 0.35) !important; }
+
+/* Компоненты */
+html.dark .tab-pill.active { background-color: rgba(99, 102, 241, 0.22); color: #c7d2fe; box-shadow: none; }
+html.dark .filter-chip { background: #1a2336; border-color: #263248; color: #94a3b8; }
+html.dark .filter-chip:hover { background: #273449; color: #f1f5f9; }
+html.dark .filter-chip.active { background: #4f46e5; border-color: #4f46e5; color: #ffffff; }
+html.dark .kpi-bento-card { background: #111827; border-color: #263248; box-shadow: none; }
+html.dark .kpi-bento-card:hover { border-color: rgba(129, 140, 248, 0.5); box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.5); }
+html.dark .badge-override-pill { background-color: rgba(245, 158, 11, 0.18); color: #fcd34d; border-color: rgba(245, 158, 11, 0.35); }
+html.dark .norm-marker { background-color: #e2e8f0; }
+html.dark .norm-marker-label { background: #1e293b; color: #e2e8f0; border-color: #334155; }
+html.dark .gantt-track {
+  background-image: repeating-linear-gradient(to right, #1e293b 0, #1e293b 1px, transparent 1px, transparent calc(100% / 12));
+}
+html.dark ::-webkit-scrollbar-track { background: #0f172a; }
+html.dark ::-webkit-scrollbar-thumb { background: #334155; }
+html.dark ::-webkit-scrollbar-thumb:hover { background: #475569; }

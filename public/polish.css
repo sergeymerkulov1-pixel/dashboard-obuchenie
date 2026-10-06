@@ -1,0 +1,267 @@
+/* Визуальная доводка дашборда: анимации, легенда графика, метка нормы, дозаполнение тёмной темы.
+   Подключается после style.css. */
+
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ring-track: #e8ecf4;
+  --card-shadow-hover: 0 18px 36px -12px rgba(30, 41, 99, 0.16), 0 4px 10px -4px rgba(30, 41, 99, 0.06);
+}
+html.dark {
+  --ring-track: #243049;
+  --card-shadow-hover: 0 18px 36px -12px rgba(0, 0, 0, 0.6);
+}
+
+/* Цифры не «прыгают» по ширине, пока крутятся */
+#heroTotalCount, #cardsContainer, #attentionCardsGrid, #circularProgressGrid, #summaryTableBody,
+#structureDirections, #structureKvc, #blockCurators table, #blockRating table, #yearProgressPct {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ================= ПОЯВЛЕНИЕ БЛОКОВ ================= */
+html.motion .reveal {
+  opacity: 0;
+  transform: translateY(16px) scale(0.985);
+  transition: opacity 0.7s var(--ease-out), transform 0.8s var(--ease-out);
+  will-change: opacity, transform;
+}
+html.motion .reveal.reveal-in {
+  opacity: 1;
+  transform: none;
+}
+/* у карточек KPI свой hover-transform — после появления возвращаем его */
+html.motion .kpi-bento-card.reveal.reveal-in:hover { transform: translateY(-3px); }
+
+/* ================= РОСТ ПОЛОС ================= */
+html.motion .bar-grow {
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 1s var(--ease-out), filter 0.15s ease, opacity 0.15s ease;
+}
+html.motion .bar-grow.bar-in { transform: scaleX(1); }
+
+/* ================= КОЛЬЦА ================= */
+.ring-track { stroke: var(--ring-track); }
+#circularProgressGrid circle[id] {
+  transition: stroke-dashoffset 1.4s var(--ease-out) 0.25s;
+}
+#circularProgressGrid > div {
+  transition: transform 0.25s var(--ease-out), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+#circularProgressGrid > div:hover {
+  transform: translateY(-2px);
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 10px 24px -12px rgba(79, 70, 229, 0.35);
+}
+
+/* ================= КАРТОЧКИ И БЛОКИ ================= */
+.kpi-bento-card:hover { box-shadow: var(--card-shadow-hover); }
+#sectionDashboard > .grid > div,
+#blockTable, #blockReconcile, #blockSchedule, #blockRating, #blockCurators {
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+#sectionDashboard > .grid > div.bg-white:hover { box-shadow: var(--card-shadow-hover); }
+
+/* лёгкий «дышащий» блик на индиго-карточке итога */
+@keyframes heroGlow {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.55; }
+  50% { transform: translate(-28px, 22px) scale(1.25); opacity: 0.9; }
+}
+html.motion .hero-glow { animation: heroGlow 9s ease-in-out infinite; }
+
+/* Спарклайн в индиго-карточке: линия прорисовывается, заливка проявляется, точка пульсирует */
+#heroSparkline .spark-dot { filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8)); transform-box: fill-box; transform-origin: center; }
+html.motion #heroSparkline .spark-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: sparkDraw 1.6s var(--ease-out) 0.3s forwards; }
+html.motion #heroSparkline .spark-area { opacity: 0; animation: fadeIn 1s ease 1s forwards; }
+html.motion #heroSparkline .spark-dot { opacity: 0; animation: fadeIn 0.4s ease 1.6s forwards, dotPulse 2.4s ease-in-out 2s infinite; }
+@keyframes sparkDraw { to { stroke-dashoffset: 0; } }
+@keyframes fadeIn { to { opacity: 1; } }
+@keyframes dotPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.45); } }
+
+/* Прогресс года в карточке «Учебный отдел» */
+.year-progress-track {
+  position: relative;
+  height: 8px;
+  border-radius: 9999px;
+  background: #eef1f7;
+  overflow: hidden;
+}
+html.dark .year-progress-track { background: #1e293b; }
+.year-progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #818cf8, #4f46e5);
+  position: relative;
+  transition: width 1.3s var(--ease-out) 0.2s;
+}
+html.motion .year-progress-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 2.8s ease-in-out 1.6s infinite;
+}
+@keyframes shimmer { to { transform: translateX(100%); } }
+
+/* Пульс «живых» значков */
+@keyframes softPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45); } 50% { box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); } }
+html.motion .live-dot { animation: softPulse 2.2s ease-in-out infinite; }
+
+/* Кнопки: отклик на нажатие */
+html.motion button:not(:disabled):active,
+html.motion .snap-chip:active { transform: scale(0.97); }
+
+/* ================= ЛЕГЕНДА-ЧИПЫ ГРАФИКА ================= */
+.filter-chip[data-key] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.filter-chip[data-key]::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--series);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--series) 25%, transparent);
+  transition: transform 0.2s var(--ease-out);
+}
+.filter-chip[data-key="total"] { --series: #4f46e5; }
+.filter-chip[data-key="gz"] { --series: #0ea5e9; }
+.filter-chip[data-key="mfc"] { --series: #10b981; }
+.filter-chip[data-key="kvc"] { --series: #f59e0b; }
+.filter-chip[data-key="omsu"] { --series: #a855f7; }
+.filter-chip[data-key].active,
+html.dark .filter-chip[data-key].active {
+  background: color-mix(in srgb, var(--series) 12%, transparent);
+  border-color: color-mix(in srgb, var(--series) 45%, transparent);
+  color: inherit;
+  box-shadow: none;
+}
+.filter-chip[data-key]:not(.active) { opacity: 0.55; }
+.filter-chip[data-key]:not(.active)::before { background: transparent; box-shadow: inset 0 0 0 1.5px var(--series); }
+.filter-chip[data-key]:hover::before { transform: scale(1.25); }
+.filter-chip[data-key].active { color: #1e293b; }
+html.dark .filter-chip[data-key].active { color: #f1f5f9; }
+
+/* Подпись типов линий под графиком */
+.chart-key { display: inline-flex; align-items: center; gap: 6px; }
+.chart-key i { display: inline-block; width: 18px; height: 0; border-top: 2px solid currentColor; }
+.chart-key i.dash { border-top-style: dashed; }
+.chart-key i.dot { border-top-style: dotted; border-top-width: 3px; }
+
+/* ================= МЕТКА НОРМЫ НА ПОЛОСЕ ================= */
+/* подпись уходит под полосу, чтобы не закрывать процент выполнения */
+.norm-marker { top: -3px; bottom: -3px; border-radius: 2px; }
+.norm-marker-label {
+  top: auto;
+  bottom: -19px;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 0 4px;
+  line-height: 14px;
+}
+.kpi-progress-track { margin-bottom: 26px !important; }
+
+/* ================= СКЕЛЕТОН ЗАГРУЗКИ ================= */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #eef1f7;
+  border-radius: 24px;
+}
+html.dark .skeleton { background: #141c2e; }
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+html.dark .skeleton::after { background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent); }
+
+/* ================= ТЁМНАЯ ТЕМА: ПРОПУЩЕННЫЕ ЦВЕТА ================= */
+html.dark [class~="bg-teal-50"], html.dark [class~="bg-teal-50/40"], html.dark [class~="bg-teal-50/50"],
+html.dark [class~="bg-emerald-50/40"] { background-color: rgba(20, 184, 166, 0.12) !important; }
+html.dark [class~="bg-sky-50"], html.dark [class~="bg-blue-50"] { background-color: rgba(14, 165, 233, 0.14) !important; }
+html.dark [class~="bg-violet-50"], html.dark [class~="bg-purple-50"] { background-color: rgba(139, 92, 246, 0.16) !important; }
+html.dark [class~="bg-amber-50/50"], html.dark [class~="bg-amber-50/90"] { background-color: rgba(245, 158, 11, 0.1) !important; }
+html.dark [class~="bg-rose-50/50"] { background-color: rgba(244, 63, 94, 0.1) !important; }
+html.dark [class~="bg-slate-50/60"], html.dark [class~="bg-slate-50/80"] { background-color: #151e31 !important; }
+html.dark [class~="bg-slate-100/90"] { background-color: rgba(30, 41, 59, 0.9) !important; }
+html.dark [class~="bg-indigo-50/50"] { background-color: rgba(99, 102, 241, 0.14) !important; }
+html.dark [class~="bg-amber-200"] { background-color: rgba(245, 158, 11, 0.3) !important; color: #fde68a; }
+html.dark [class~="bg-slate-300"] { background-color: #475569 !important; }
+html.dark [class~="hover:bg-amber-100"]:hover, html.dark [class~="hover:bg-amber-300"]:hover { background-color: rgba(245, 158, 11, 0.32) !important; }
+
+html.dark [class~="border-teal-200"], html.dark [class~="border-teal-200/70"] { border-color: rgba(45, 212, 191, 0.32) !important; }
+html.dark [class~="border-sky-200"] { border-color: rgba(56, 189, 248, 0.35) !important; }
+html.dark [class~="border-violet-200"] { border-color: rgba(167, 139, 250, 0.35) !important; }
+html.dark [class~="border-amber-300"] { border-color: rgba(245, 158, 11, 0.45) !important; }
+html.dark [class~="border-emerald-200"] { border-color: rgba(16, 185, 129, 0.35) !important; }
+html.dark [class~="border-rose-100"], html.dark [class~="border-rose-200/50"] { border-color: rgba(244, 63, 94, 0.25) !important; }
+html.dark [class~="border-indigo-100"] { border-color: rgba(99, 102, 241, 0.3) !important; }
+html.dark [class~="border-slate-200/60"], html.dark [class~="border-slate-200/90"], html.dark [class~="border-slate-100/60"] { border-color: #263248 !important; }
+
+html.dark [class~="text-teal-600"], html.dark [class~="text-teal-600/80"], html.dark [class~="text-teal-800"] { color: #5eead4 !important; }
+html.dark [class~="text-sky-700"] { color: #7dd3fc !important; }
+html.dark [class~="text-violet-700"] { color: #c4b5fd !important; }
+html.dark [class~="text-amber-600"] { color: #fbbf24 !important; }
+
+/* Разделители строк: Tailwind рисует их верхней границей, включая последнюю строку */
+html.dark .divide-slate-100 > *, html.dark .divide-slate-50 > *, html.dark .divide-y > * { border-color: #263248 !important; }
+
+/* «Требует внимания»: градиентная подложка в тёмной теме */
+html.dark #attentionSection { background: linear-gradient(90deg, rgba(244, 63, 94, 0.1), rgba(245, 158, 11, 0.05) 50%, #111827) !important; }
+
+/* Лента дат: в тёмной теме бирюзовые чипы читаемые */
+html.dark #timelineChips .snap-chip { background-color: #151e31; }
+html.dark #timelineChips .snap-chip.border-2 { background-color: rgba(99, 102, 241, 0.2); }
+
+/* ================= ГРАФИК ================= */
+#historyChart { cursor: crosshair; }
+
+/* ================= УМЕНЬШЕННОЕ ДВИЖЕНИЕ ================= */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+/* Печать: ничего не скрыто анимацией */
+@media print {
+  .reveal, .bar-grow { opacity: 1 !important; transform: none !important; }
+}
+
+/* ================= ТЕЛЕФОН: панели шапки прокручиваются, а не обрезаются ================= */
+@media (max-width: 768px) {
+  header > div {
+    max-width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  header > div::-webkit-scrollbar { display: none; }
+  header > div > * { flex-shrink: 0; }
+  #heroTotalCount { font-size: 2.75rem; }
+}
+
+/* ================= УЧЁНЫЙ КОТ БОРИС AI ================= */
+.boris-avatar { background: #e0e7ff; }
+#aiChatToggleBtn .boris-avatar { transition: transform 0.4s var(--ease-out); }
+#aiChatToggleBtn:hover .boris-avatar { transform: rotate(-8deg) scale(1.08); }
+html.motion #aiChatToggleBtn { animation: borisFloat 4.5s ease-in-out infinite; }
+html.motion #aiChatToggleBtn:hover { animation-play-state: paused; }
+@keyframes borisFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.boris-card img { transition: transform 6s ease-out; }
+html.motion .boris-card:hover img { transform: scale(1.06); }
+html.dark .boris-card { border-color: rgba(99, 102, 241, 0.35); }
+
+/* Плавающий чат: ширина не должна зависеть от позиции в flex-контейнере body */
+#aiChatWidget {
+  left: auto;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+}
+#aiChatToggleBtn { white-space: nowrap; flex-shrink: 0; }
+#aiChatToggleBtn > div { flex-shrink: 0; }

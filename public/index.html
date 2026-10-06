@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Учебный отдел · Dashboards V3</title>
+  
+  <!-- Шрифт Inter и Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Зафиксированные локальные скрипты вендоров (работает автономно без внешнего CDN) -->
+  <script src="vendor/tailwind.play.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              primary: '#4f46e5',
+              secondary: '#6366f1',
+              accent: '#818cf8',
+              sidebar: '#4338ca',
+              sidebarDark: '#3730a3'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Зафиксированные библиотеки: Lucide v0.460.0 и Chart.js v4.4.6 -->
+  <script src="vendor/lucide.min.js"></script>
+  <script src="vendor/chart.umd.min.js"></script>
+
+  <script>try{if(localStorage.getItem("theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}</script>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="polish.css">
+</head>
+<body class="bg-[#f4f6fb] text-slate-800 min-h-screen flex antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- ================= ЭКРАН ВХОДА: дашборд открывается только после авторизации ================= -->
+  <div id="loginScreen" class="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto bg-gradient-to-br from-indigo-950 via-indigo-800 to-purple-900">
+    <div id="loginCard" class="opacity-0 transition-opacity duration-500 w-full max-w-4xl grid md:grid-cols-2 rounded-[28px] overflow-hidden shadow-2xl bg-white">
+      <div class="relative hidden md:block min-h-[440px]">
+        <img src="assets/boris.webp?v=2" alt="Учёный кот Борис AI читает книгу, из которой поднимается светящаяся нейросеть" class="absolute inset-0 w-full h-full object-cover object-[50%_28%]">
+        <div class="absolute inset-0 bg-gradient-to-t from-indigo-950/90 via-indigo-950/25 to-transparent"></div>
+        <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
+          <div class="text-lg font-extrabold">Учёный кот Борис <span class="text-amber-300">AI</span></div>
+          <p id="loginBorisSpeech" class="text-xs text-indigo-100 mt-1.5 leading-relaxed"></p>
+        </div>
+      </div>
+      <div class="p-7 lg:p-10 flex flex-col justify-center">
+        <div class="md:hidden flex items-center gap-3 mb-5">
+          <img src="assets/boris-face-sm.webp?v=2" alt="" class="boris-avatar w-12 h-12 rounded-full object-cover ring-2 ring-indigo-200">
+          <div class="text-xs text-slate-500 leading-snug"><span class="font-extrabold text-slate-800">Учёный кот Борис AI</span><br>Назовитесь, и я открою дашборд.</div>
+        </div>
+        <div class="flex items-center gap-2 mb-1">
+          <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center"><i data-lucide="graduation-cap" class="w-4 h-4"></i></div>
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Учебный отдел</span>
+        </div>
+        <h1 class="text-2xl font-extrabold text-slate-900 mb-1">Вход в дашборд</h1>
+        <p class="text-xs text-slate-500 mb-6">Введите логин и пароль. Состав разделов зависит от вашей роли.</p>
+        <form id="loginForm" class="space-y-4">
+          <div>
+            <label for="loginUsername" class="block text-xs font-bold text-slate-700 mb-1">Логин</label>
+            <input type="text" id="loginUsername" required autocomplete="username" autocapitalize="none" spellcheck="false" class="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:outline-none">
+          </div>
+          <div>
+            <label for="loginPassword" class="block text-xs font-bold text-slate-700 mb-1">Пароль</label>
+            <input type="password" id="loginPassword" required autocomplete="current-password" class="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:outline-none">
+          </div>
+          <div id="loginError" role="alert" class="hidden text-xs text-rose-600 font-semibold bg-rose-50 p-2.5 rounded-xl border border-rose-200"></div>
+          <button type="submit" id="loginSubmitBtn" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md shadow-indigo-500/20 transition disabled:opacity-60">Войти</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================= БОКОВАЯ ПАНЕЛЬ С КНОПКАМИ (SIDEBAR RAIL) ================= -->
+  <aside class="sidebar-rail fixed left-4 top-4 bottom-4 w-[76px] bg-gradient-to-b from-[#4f46e5] via-[#4338ca] to-[#3730a3] rounded-[28px] shadow-2xl shadow-indigo-900/30 flex flex-col items-center py-6 z-40 text-white transition-all duration-300">
+    
+    <!-- Логотип / Бренд-иконка -->
+    <a href="javascript:void(0)" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-white mb-8 border border-white/20 hover:scale-105 transition shadow-inner" title="Наверх">
+      <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+    </a>
+
+    <!-- Навигационные кнопки -->
+    <nav class="flex-1 flex flex-col items-center space-y-3 w-full px-3">
+      <!-- 1. Главный дашборд -->
+      <button class="nav-rail-btn active group" data-tab="dashboard" title="Обзор дашборда">
+        <i data-lucide="layout-grid" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+        <span class="tooltip">Дашборд</span>
+      </button>
+
+      <!-- 2. График динамики -->
+      <button class="nav-rail-btn group" data-tab="analytics" title="Динамика и аналитика">
+        <i data-lucide="trending-up" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+        <span class="tooltip">Динамика</span>
+      </button>
+
+      <!-- 3. Таблица выполнения -->
+      <button class="nav-rail-btn group" data-tab="table" title="Сводная таблица">
+        <i data-lucide="table-2" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+        <span class="tooltip">Таблица</span>
+      </button>
+
+      <!-- 3a. План-график программ -->
+      <button class="nav-rail-btn group" data-tab="schedule" title="План-график программ">
+        <i data-lucide="calendar-range" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+        <span class="tooltip">План-график</span>
+      </button>
+
+      <!-- 3b. Рейтинг программ по анкетам -->
+      <button class="nav-rail-btn group" data-tab="rating" title="Рейтинг программ по анкетам">
+        <i data-lucide="award" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+        <span class="tooltip">Рейтинг</span>
+      </button>
+
+      <!-- 3c. Кураторы -->
+      <button class="nav-rail-btn group" data-tab="curators" title="Кураторы: нагрузка и рейтинг">
+        <i data-lucide="users" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+        <span class="tooltip">Кураторы</span>
+      </button>
+
+      <!-- Разделитель -->
+      <div class="w-8 h-[1px] bg-white/20 my-2"></div>
+
+      <!-- 4. ИИ-помощник GigaChat -->
+      <button class="nav-rail-btn group relative" id="railBtnChat" title="Учёный кот Борис AI">
+        <img src="assets/boris-face-sm.webp?v=2" alt="" class="boris-avatar w-8 h-8 rounded-full object-cover ring-2 ring-white/60 transition-transform group-hover:scale-110">
+        <span class="tooltip">Учёный кот Борис AI</span>
+      </button>
+
+    <!-- 5. Журнал аудита -->
+    <button class="nav-rail-btn group" id="railBtnAudit" title="Журнал правок">
+      <i data-lucide="history" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+      <span class="tooltip">Журнал правок</span>
+    </button>
+
+      <!-- 6. Загрузка Excel -->
+      <button class="nav-rail-btn group" id="railBtnUpload" title="Загрузка Excel">
+        <i data-lucide="upload-cloud" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+        <span class="tooltip">Загрузить Excel</span>
+      </button>
+    </nav>
+
+    <!-- Нижняя секция: Авторизация и статус -->
+    <div class="flex flex-col items-center space-y-3 pt-4 border-t border-white/15 w-full px-3">
+      <button class="nav-rail-btn group relative" id="railBtnAdmin" title="Профиль и выход">
+        <i data-lucide="shield-check" class="w-5 h-5 transition-transform group-hover:scale-110"></i>
+        <span id="adminIndicatorDot" class="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-indigo-600 hidden"></span>
+        <span class="tooltip" id="adminTooltipText">Профиль</span>
+      </button>
+
+      <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xs font-bold text-white/90 border border-white/10" title="Учебный отдел 2026">
+        УО
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= ОСНОВНОЙ КОНТЕНТНЫЙ КОНТЕЙНЕР ================= -->
+  <div id="mainContentContainer" class="flex-1 ml-[96px] min-h-screen p-5 lg:p-8 flex flex-col space-y-6">
+
+    <!-- СПЕЦИАЛЬНАЯ ШАПКА РЕЖИМА ПЛАНЁРКИ (ДЛЯ ПРОЕКТОРА) -->
+    <div id="meetingModeHeader" class="hidden bg-linear-to-r from-indigo-900 via-indigo-800 to-indigo-950 text-white rounded-2xl p-4 px-6 items-center justify-between shadow-lg">
+      <div class="flex items-center gap-3">
+        <span class="px-2.5 py-1 rounded-lg bg-indigo-700/80 text-indigo-100 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+          <i data-lucide="presentation" class="w-3.5 h-3.5"></i>
+          <span>Режим планёрки</span>
+        </span>
+        <h2 class="text-base lg:text-lg font-black" id="meetingModeTitle">Учебный отдел — Мониторинг на экране</h2>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="btnPrintMeeting" class="px-3.5 py-1.5 rounded-xl bg-white text-indigo-950 text-xs font-bold hover:bg-indigo-50 shadow-sm transition flex items-center gap-1.5" aria-label="Печать или экспорт в PDF">
+          <i data-lucide="printer" class="w-4 h-4"></i>
+          <span>Печать / PDF</span>
+        </button>
+        <button id="btnExitMeetingMode" class="px-3.5 py-1.5 rounded-xl bg-indigo-800/80 text-white text-xs font-bold hover:bg-indigo-700 transition" aria-label="Выйти из режима планёрки">
+          Выйти из режима
+        </button>
+      </div>
+    </div>
+
+    <!-- ВЕРХНИЙ ТОПБАР В СТИЛЕ DASHBOARDS V3 -->
+    <header class="bg-white/80 backdrop-blur-xl rounded-2xl p-3.5 px-6 border border-slate-200/70 shadow-xs flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Левая часть: навигационные пилюли -->
+      <div class="flex items-center space-x-2 text-xs font-semibold text-slate-600">
+        <button class="tab-pill active flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-600 transition" data-target="dashboard">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+          <span>Главная</span>
+        </button>
+        <button class="tab-pill flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-slate-100 text-slate-600 transition" data-target="analytics">
+          <i data-lucide="line-chart" class="w-4 h-4"></i>
+          <span>Динамика</span>
+        </button>
+        <button class="tab-pill flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-slate-100 text-slate-600 transition" data-target="table">
+          <i data-lucide="sheet" class="w-4 h-4"></i>
+          <span>Таблица</span>
+        </button>
+        <button class="tab-pill flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-slate-100 text-slate-600 transition" data-target="schedule">
+          <i data-lucide="calendar-range" class="w-4 h-4"></i>
+          <span>План-график</span>
+        </button>
+        <button class="tab-pill flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-slate-100 text-slate-600 transition" data-target="rating">
+          <i data-lucide="award" class="w-4 h-4"></i>
+          <span>Рейтинг</span>
+        </button>
+      </div>
+
+      <!-- Правая часть: выбор недели и действия -->
+      <div class="flex items-center space-x-2.5 text-xs">
+        
+        <!-- Переключатель светлой / тёмной темы -->
+        <button id="btnThemeToggle" class="flex items-center justify-center w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 transition" title="Переключить тему" aria-label="Переключить светлую / тёмную тему">
+          <i data-lucide="moon" class="w-4 h-4 theme-icon-light"></i>
+          <i data-lucide="sun" class="w-4 h-4 theme-icon-dark"></i>
+        </button>
+
+        <!-- Кнопка перехода в полноэкранный режим планёрки -->
+        <button id="btnEnterMeetingMode" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold border border-indigo-200/80 transition" title="Включить чистый вид для экрана проектора" aria-label="Включить режим планёрки">
+          <i data-lucide="presentation" class="w-3.5 h-3.5"></i>
+          <span>Планёрка</span>
+        </button>
+
+        <!-- Статус всего дашборда на текущий момент -->
+        <button id="btnDashStatus" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold border border-emerald-200/80 transition" title="Статус всего дашборда на текущий момент" aria-label="Статус дашборда на текущий момент">
+          <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+          <span>Статус</span>
+        </button>
+
+        <!-- Кнопка помесячной аналитики и сравнения с прошлым годом -->
+        <button id="btnOpenMonthlyModal" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 font-semibold text-slate-700 transition" title="Разбивка по месяцам и сравнение с 2025 годом" aria-label="Разбивка по месяцам и сравнение с 2025 годом">
+          <i data-lucide="calendar" class="w-3.5 h-3.5 text-indigo-500"></i>
+          <span class="hidden sm:inline">Месяцы / 2025</span>
+        </button>
+
+        <!-- Выпадающий список срезов с бейджем -->
+        <div class="flex items-center bg-slate-100 rounded-xl px-2.5 py-1 border border-slate-200">
+          <i data-lucide="calendar-days" class="w-3.5 h-3.5 text-slate-500 mr-1.5"></i>
+          <span class="text-[11px] font-medium text-slate-400 mr-1.5">Срез:</span>
+          <select id="snapshotSelect" class="bg-transparent font-bold text-slate-800 text-xs focus:outline-none cursor-pointer" aria-label="Выбор среза">
+            <option value="">Загрузка...</option>
+          </select>
+        </div>
+
+        <!-- Кнопка выгрузки Excel -->
+        <div class="relative inline-block text-left" id="exportDropdownContainer">
+          <button id="exportBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 font-semibold text-slate-700 transition" aria-label="Меню экспорта">
+            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
+            <span>Экспорт</span>
+            <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400"></i>
+          </button>
+          
+          <div id="exportMenu" class="hidden absolute right-0 mt-2 w-52 rounded-2xl shadow-xl bg-white border border-slate-100 divide-y divide-slate-100 z-50 overflow-hidden">
+            <div class="py-1">
+              <a href="#" id="exportCurrentLink" class="flex items-center gap-2 px-4 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium">
+                <i data-lucide="file-check" class="w-4 h-4 text-emerald-600"></i>
+                <span>Текущий срез (.xlsx)</span>
+              </a>
+              <a href="#" id="exportHistoryLink" class="flex items-center gap-2 px-4 py-2.5 text-xs text-slate-700 hover:bg-slate-50 font-medium">
+                <i data-lucide="history" class="w-4 h-4 text-indigo-600"></i>
+                <span>Вся история (.xlsx)</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Кнопка фиксации нового среза (для админа) -->
+        <button id="btnTopNewSnapshot" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-sm transition" aria-label="Зафиксировать новый срез">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          <span class="hidden sm:inline">Новый срез</span>
+        </button>
+
+      </div>
+    </header>
+
+    <!-- СТРОКА СТАТУСА РЕЖИМА АДМИНИСТРАТОРА (если авторизован) -->
+    <div id="adminBar" class="hidden bg-amber-50/90 border border-amber-200 rounded-2xl p-3 px-5 text-xs text-amber-900 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+      <div class="flex items-center space-x-2">
+        <span class="flex h-2.5 w-2.5 relative">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+        </span>
+        <span class="font-bold">Панель администратора активна</span>
+        <span class="text-amber-700">· Ручные правки включены, логирование ведется в журнал</span>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button id="btnOpenAuditLog" class="px-3 py-1 rounded-xl bg-white border border-amber-300 font-semibold hover:bg-amber-100 transition shadow-2xs">
+          Журнал аудита
+        </button>
+        <button id="adminLogoutBtn" class="px-3 py-1 rounded-xl bg-amber-200 font-bold hover:bg-amber-300 transition">
+          Выйти
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= BENTO GRID ДАШБОРД ================= -->
+    <section id="sectionDashboard" class="space-y-6">
+
+      <!-- ВЕРХНИЙ РЯД BENTO КАРТОЧЕК -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        
+        <!-- Карточка 1: Приветствие и контекст планёрки (4 колонки) -->
+        <div class="lg:col-span-4 bg-white rounded-[24px] p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between relative overflow-hidden">
+          <div class="relative z-10">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">
+                Планёрка по средам
+              </span>
+              <span id="snapshotBadge" class="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
+                Срез: вт после 16:00
+              </span>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">
+              Учебный отдел <span class="inline-block animate-wave">👋</span>
+            </h2>
+            <p id="snapshotNoteText" class="text-xs text-slate-500 mt-2 leading-relaxed">
+              Мониторинг исполнения государственного задания, МФЦ, КВЦ и платных программ на <strong id="currentSnapshotDateTitle" class="text-slate-800">—</strong>.
+            </p>
+          </div>
+
+          <!-- Прогресс года: откуда берётся норма «должны быть сегодня» -->
+          <div class="relative z-10 mt-5 p-4 rounded-2xl bg-slate-50 border border-slate-200/70">
+            <div class="flex items-baseline justify-between mb-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Прошло года</span>
+              <span class="text-2xl font-black text-indigo-600 tracking-tight" id="yearProgressPct">—</span>
+            </div>
+            <div class="year-progress-track"><div class="year-progress-fill" id="yearProgressBar" style="width: 0%"></div></div>
+            <div class="mt-2 flex items-center justify-between text-[11px] text-slate-500">
+              <span id="yearProgressDays">—</span>
+              <span id="yearProgressLeft" class="font-semibold text-slate-600">—</span>
+            </div>
+          </div>
+
+          <div class="pt-5 mt-5 border-t border-slate-100 flex items-center justify-between">
+            <div>
+              <div class="text-[11px] font-semibold text-slate-400 uppercase">Предыдущий срез</div>
+              <div class="text-xs font-bold text-slate-700" id="comparisonNote">—</div>
+            </div>
+            <button id="btnQuickRefresh" class="w-9 h-9 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 border border-slate-200 flex items-center justify-center text-slate-500 transition" title="Обновить срез">
+              <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Карточка 2: Сводный охват обучения (Индиго-карточка как "Go premium" на референсе) (4 колонки) -->
+        <div class="lg:col-span-4 bg-gradient-to-br from-[#4f46e5] via-[#4338ca] to-[#312e81] rounded-[24px] p-6 text-white shadow-lg shadow-indigo-500/15 relative overflow-hidden flex flex-col justify-between">
+          <div class="hero-glow absolute -right-12 -top-12 w-44 h-44 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div class="hero-glow absolute -left-16 -bottom-20 w-56 h-56 bg-fuchsia-400/10 rounded-full blur-3xl pointer-events-none" style="animation-delay:-4s"></div>
+          
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-indigo-200 bg-white/15 px-2.5 py-1 rounded-lg backdrop-blur-xs">
+                Сводный охват
+              </span>
+              <div id="heroTotalDelta" class="text-xs font-bold px-2 py-0.5 rounded-lg bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1">
+                —
+              </div>
+            </div>
+            <div class="text-xs text-indigo-200 font-medium">Общий итог (чел.)</div>
+            <div class="text-5xl font-black tracking-tight text-white mt-1" id="heroTotalCount">—</div>
+            <p class="text-[11px] text-indigo-200/80 mt-2 leading-relaxed">
+              Госзадание + МФЦ МО + ОМСУ и подведы (согласно PRD КВЦ не входит в общий итог).
+            </p>
+          </div>
+
+          <!-- Спарклайн общего итога по срезам -->
+          <div class="relative z-10 mt-4 hidden" id="heroSparkWrap">
+            <svg id="heroSparkline" class="w-full h-20 overflow-visible" viewBox="0 0 300 80" role="img" aria-label="Динамика общего итога по срезам"></svg>
+            <div class="flex justify-between text-[10px] text-indigo-200/80 font-semibold mt-1">
+              <span id="heroSparkFrom">—</span>
+              <span id="heroSparkTo">—</span>
+            </div>
+          </div>
+
+          <div class="pt-4 mt-4 border-t border-white/15 flex items-center justify-between relative z-10">
+            <span class="text-xs text-indigo-200 font-medium" id="heroSnapshotState">Снимок недели зафиксирован</span>
+            <button id="btnOpenNewSnapshotHero" class="px-3 py-1.5 rounded-xl bg-white text-indigo-700 text-xs font-bold hover:bg-indigo-50 shadow-sm transition">
+              Корректировка
+            </button>
+          </div>
+        </div>
+
+        <!-- Карточка 3: Интерактивный календарь срезов планёрок (4 колонки) -->
+        <div class="lg:col-span-4 bg-white rounded-[24px] p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">График планёрок</span>
+              <span class="text-xs font-bold text-slate-800" id="meetingScheduleRange">Сен – Окт 2026</span>
+            </div>
+            
+            <!-- Лента дат срезов с подписью месяца и дня недели -->
+            <div class="grid grid-cols-4 gap-2 my-3 text-center" id="timelineChips">
+              <div class="p-2 rounded-2xl border border-slate-200 bg-white text-slate-700 text-xs cursor-pointer hover:border-indigo-400 transition snap-chip" data-snap="2026-09-24" title="Срез 24 сентября 2026 (четверг)">
+                <div class="text-[10px] font-bold text-slate-400 uppercase">24 сен</div>
+                <div class="font-black text-sm text-slate-800">ЧТ</div>
+              </div>
+              <div class="p-2 rounded-2xl border border-slate-200 bg-white text-slate-700 text-xs cursor-pointer hover:border-indigo-400 transition snap-chip" data-snap="2026-10-01" title="Срез 01 октября 2026 (четверг)">
+                <div class="text-[10px] font-bold text-slate-400 uppercase">01 окт</div>
+                <div class="font-black text-sm text-slate-800">ЧТ</div>
+              </div>
+              <div class="p-2 rounded-2xl border-2 border-indigo-600 bg-indigo-50 text-indigo-700 text-xs cursor-pointer shadow-xs transition snap-chip" data-snap="2026-10-05" title="Срез 05 октября 2026 (базовый срез PRD)">
+                <div class="text-[10px] font-bold text-indigo-500 uppercase">05 окт</div>
+                <div class="font-black text-sm text-indigo-700">ПН</div>
+              </div>
+              <div class="p-2 rounded-2xl border border-dashed border-indigo-300 bg-indigo-50/40 text-indigo-600 text-xs cursor-pointer hover:bg-indigo-50 transition" id="btnNextWednesday" title="Ближайшая планёрка: среда 07.10">
+                <div class="text-[10px] font-bold text-indigo-400 uppercase">07 окт</div>
+                <div class="font-black text-sm text-indigo-600">ВТ 16:05</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Статусы по программам на выбранную дату планёрки (из еженедельных отчётов) -->
+          <div id="statusWeekPanel" class="hidden my-3 p-3 rounded-xl border border-teal-200/70 bg-teal-50/40"></div>
+
+          <div class="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-200/60 flex items-center gap-2">
+            <i data-lucide="info" class="w-4 h-4 text-indigo-500 shrink-0"></i>
+            <span id="nextMeetingNote">Срез сохраняется по вторникам после <strong>16:00 МСК</strong>, планёрка — в среду.</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- БЛОК "ТРЕБУЕТ ВНИМАНИЯ" (2-3 направления с наибольшим отставанием от плана к текущей дате) -->
+      <div id="attentionSection" class="hidden bg-linear-to-r from-rose-50/90 via-amber-50/50 to-white border border-rose-200/90 rounded-[24px] p-5 lg:p-6 shadow-xs">
+        <div id="attentionHeader" class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-rose-100 border border-rose-200 flex items-center justify-center text-rose-600 font-bold">
+              <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                <span>Требует внимания</span>
+                <span class="text-xs px-2 py-0.5 rounded-md bg-rose-100 text-rose-700 font-bold" id="attentionNormBadge">Норма на сегодня: 76%</span>
+              </h3>
+              <p class="text-[11px] text-slate-500">Направления с наибольшим отставанием от расчетного графика года</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btnOpenActionPlanModal" class="text-xs font-bold text-rose-700 hover:text-rose-900 bg-white border border-rose-200 px-3 py-1.5 rounded-xl shadow-2xs hover:bg-rose-50 transition flex items-center gap-1.5">
+              <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+              <span>План действий / Комментарии</span>
+            </button>
+            <button id="btnToggleAttention" type="button" aria-expanded="true" title="Скрыть / показать красную зону" class="text-xs font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-2xs hover:bg-slate-50 transition flex items-center gap-1.5">
+              <i data-lucide="eye-off" class="w-3.5 h-3.5"></i>
+              <span>Скрыть</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="attentionCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Генерируется динамически в renderAttentionSection -->
+        </div>
+      </div>
+
+      <!-- ВТОРОЙ РЯД: КАРТОЧКИ ПОКАЗАТЕЛЕЙ (BENTO КАРТОЧКИ) -->
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <h3 class="text-base font-extrabold text-slate-900">Исполнение планов обучения</h3>
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">PRD v1</span>
+          </div>
+          <span class="text-xs text-slate-400">Показатели план-факта в штуках и %</span>
+        </div>
+
+        <div id="cardsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <!-- Карточки наполняются в app.js -->
+        </div>
+      </div>
+
+      <!-- ТРЕТИЙ РЯД: ГРАФИК ДИНАМИКИ И СВОДКА КРУГОВЫХ ДИАГРАММ -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5" id="blockAnalytics">
+        
+        <!-- Большой график динамики (8 колонок) -->
+        <div class="lg:col-span-8 bg-white rounded-[24px] p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                <i data-lucide="trending-up" class="w-4 h-4 text-indigo-600"></i>
+                <span>Динамика по неделям</span>
+              </h3>
+              <p class="text-xs text-slate-400 mt-0.5">Еженедельный прогресс, пунктир плана и прогноз на 31.12. История КВЦ до первого среза — из еженедельных статусов</p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-2">
+              <!-- Переключатель шкалы: чел. / % от плана -->
+              <div class="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs" id="chartUnitToggle">
+                <button id="btnChartModeAbs" class="px-2.5 py-1 rounded-lg font-bold bg-white text-indigo-700 shadow-2xs transition">чел.</button>
+                <button id="btnChartModePct" class="px-2.5 py-1 rounded-lg font-semibold text-slate-500 hover:text-slate-800 transition">% от плана</button>
+              </div>
+
+              <!-- Чипы переключения серий данных -->
+              <div class="flex flex-wrap gap-1.5 text-xs" id="chartFilterChips">
+                <button class="filter-chip active" data-key="total">Общий итог</button>
+                <button class="filter-chip active" data-key="gz">Госзадание</button>
+                <button class="filter-chip active" data-key="mfc">МФЦ МО</button>
+                <button class="filter-chip active" data-key="kvc">КВЦ</button>
+                <button class="filter-chip active" data-key="omsu">ОМСУ</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="w-full h-80 relative">
+            <canvas id="historyChart" role="img" aria-label="Динамика показателей по неделям с планом и прогнозом на 31.12"></canvas>
+          </div>
+          <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-[11px] text-slate-400">
+            <span class="chart-key"><i></i>факт</span>
+            <span class="chart-key"><i class="dash"></i>план года</span>
+            <span class="chart-key"><i class="dot"></i>прогноз на 31.12 по текущему темпу</span>
+            <span class="chart-key"><span class="inline-block w-2.5 h-2.5 rounded-full border-2 border-current"></span>значение перенесено из презентации</span>
+          </div>
+        </div>
+
+        <!-- Круговые диаграммы прогресса (4 колонки как Data Research / Marketing на референсе) -->
+        <div class="lg:col-span-4 bg-white rounded-[24px] p-6 border border-slate-200/80 shadow-xs flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-base font-extrabold text-slate-900">Процент от плана</h3>
+              <i data-lucide="pie-chart" class="w-4 h-4 text-slate-400"></i>
+            </div>
+            <p class="text-xs text-slate-400 mb-6">Текущий процент достижения установленных планов года</p>
+
+            <!-- Круговые индикаторы в стиле скриншота -->
+            <div class="grid grid-cols-2 gap-4" id="circularProgressGrid">
+              <!-- Госзадание -->
+              <div class="flex flex-col items-center text-center p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                <div class="relative w-18 h-18 flex items-center justify-center mb-2">
+                  <svg class="w-16 h-16 transform -rotate-90">
+                    <circle cx="32" cy="32" r="26" class="ring-track" stroke-width="5" fill="transparent"/>
+                    <circle id="circleGz" cx="32" cy="32" r="26" stroke="#4f46e5" stroke-width="5" stroke-linecap="round" fill="transparent" stroke-dasharray="163" stroke-dashoffset="163"/>
+                  </svg>
+                  <span id="circleGzVal" class="absolute text-xs font-black text-slate-800">—</span>
+                </div>
+                <div class="text-xs font-bold text-slate-800">Госзадание</div>
+                <div class="text-[10px] text-slate-400">3 660 план</div>
+              </div>
+
+              <!-- КВЦ -->
+              <div class="flex flex-col items-center text-center p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                <div class="relative w-18 h-18 flex items-center justify-center mb-2">
+                  <svg class="w-16 h-16 transform -rotate-90">
+                    <circle cx="32" cy="32" r="26" class="ring-track" stroke-width="5" fill="transparent"/>
+                    <circle id="circleKvc" cx="32" cy="32" r="26" stroke="#d97706" stroke-width="5" stroke-linecap="round" fill="transparent" stroke-dasharray="163" stroke-dashoffset="163"/>
+                  </svg>
+                  <span id="circleKvcVal" class="absolute text-xs font-black text-slate-800">—</span>
+                </div>
+                <div class="text-xs font-bold text-slate-800">КВЦ</div>
+                <div class="text-[10px] text-slate-400">3 000 план</div>
+              </div>
+
+              <!-- МФЦ МО -->
+              <div class="flex flex-col items-center text-center p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                <div class="relative w-18 h-18 flex items-center justify-center mb-2">
+                  <svg class="w-16 h-16 transform -rotate-90">
+                    <circle cx="32" cy="32" r="26" class="ring-track" stroke-width="5" fill="transparent"/>
+                    <circle id="circleMfc" cx="32" cy="32" r="26" stroke="#059669" stroke-width="5" stroke-linecap="round" fill="transparent" stroke-dasharray="163" stroke-dashoffset="163"/>
+                  </svg>
+                  <span id="circleMfcVal" class="absolute text-xs font-black text-slate-800">—</span>
+                </div>
+                <div class="text-xs font-bold text-slate-800">МФЦ МО</div>
+                <div class="text-[10px] text-slate-400">702 план</div>
+              </div>
+
+              <!-- ОМСУ -->
+              <div class="flex flex-col items-center text-center p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                <div class="w-16 h-16 rounded-full bg-indigo-50 border-2 border-indigo-200 flex flex-col items-center justify-center mb-2">
+                  <span class="text-xs font-black text-indigo-700" id="circleOmsuVal">—</span>
+                  <span class="text-[9px] text-indigo-500 font-semibold">чел.</span>
+                </div>
+                <div class="text-xs font-bold text-slate-800">ОМСУ</div>
+                <div class="text-[10px] text-slate-400">хозрасчет</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span class="text-slate-400">Расчет процента:</span>
+            <span class="font-bold text-slate-700">факт ÷ план (округление)</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ЧЕТВЁРТЫЙ РЯД: СТРУКТУРА — НАПРАВЛЕНИЯ ГОСЗАДАНИЯ И ПРОГРАММЫ КВЦ -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5" id="blockStructure">
+        <div class="bg-white rounded-[24px] p-6 border border-slate-200/80 shadow-xs">
+          <div class="mb-3">
+            <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+              <i data-lucide="layers" class="w-4 h-4 text-indigo-600"></i>
+              <span>Госзадание и МФЦ по направлениям</span>
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5" id="structureDirSub">Загрузка…</p>
+          </div>
+          <div id="structureDirections" class="divide-y divide-slate-50"></div>
+          <p class="text-[11px] text-slate-400 mt-3 leading-relaxed" id="structureDirNote"></p>
+        </div>
+        <div class="bg-white rounded-[24px] p-6 border border-slate-200/80 shadow-xs">
+          <div class="mb-3">
+            <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+              <i data-lucide="book-open" class="w-4 h-4 text-amber-600"></i>
+              <span>КВЦ: открытые курсы по программам</span>
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5" id="structureKvcSub">Загрузка…</p>
+          </div>
+          <div id="structureKvc" class="divide-y divide-slate-50"></div>
+        </div>
+      </div>
+
+      <!-- ЧЕТВЕРТЫЙ РЯД: СВОДНАЯ ТАБЛИЦА С ИСТОЧНИКАМИ И ПРАВКАМИ -->
+      <div class="bg-white rounded-[24px] border border-slate-200/80 shadow-xs overflow-hidden" id="blockTable">
+        <div class="px-6 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 class="text-base font-extrabold text-slate-900">Сводные данные для планёрки</h3>
+            <p class="text-xs text-slate-400">Детализация источников, статус ручных правок и прирост</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <a href="/api/export/current" id="tableExportBtn" class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              <span>Скачать таблицу</span>
+            </a>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-700">
+            <thead class="bg-slate-50 text-[11px] uppercase font-bold text-slate-400 border-b border-slate-100">
+              <tr>
+                <th class="px-4 py-3.5">Показатель</th>
+                <th class="px-3 py-3.5">Категория</th>
+                <th class="px-3 py-3.5">План</th>
+                <th class="px-3 py-3.5">Факт</th>
+                <th class="px-3 py-3.5">% выполнения</th>
+                <th class="px-3 py-3.5">Ожидаемо к дате</th>
+                <th class="px-3 py-3.5">Прирост</th>
+                <th class="px-3 py-3.5">Нужный темп</th>
+                <th class="px-3 py-3.5">Прогноз на 31.12</th>
+                <th class="px-4 py-3.5">Источник данных</th>
+                <th class="px-4 py-3.5 text-right">Действия</th>
+              </tr>
+            </thead>
+            <tbody id="summaryTableBody" class="divide-y divide-slate-100">
+              <!-- Наполняется в app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- СВЕРКА ДАННЫХ МЕЖДУ ИСТОЧНИКАМИ -->
+      <div class="bg-white rounded-[24px] border border-slate-200/80 shadow-xs overflow-hidden" id="blockReconcile">
+        <div class="px-6 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+              <i data-lucide="scale" class="w-4 h-4 text-indigo-600"></i>
+              <span>Сверка данных</span>
+            </h3>
+            <p class="text-xs text-slate-400">Срезы дашборда, презентации планёрок, статусы, план-график, таблица кураторов и анкеты</p>
+          </div>
+          <div class="text-xs" id="reconcileSummary"></div>
+        </div>
+        <div class="p-5" id="reconcileBody"><div class="text-xs text-slate-400">Загрузка…</div></div>
+      </div>
+
+      <!-- ПЯТЫЙ РЯД: ПЛАН-ГРАФИК ПРОГРАММ -->
+      <div class="bg-white rounded-[24px] border border-slate-200/80 shadow-xs overflow-hidden" id="blockSchedule">
+        <div class="px-6 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+              <i data-lucide="calendar-range" class="w-4 h-4 text-indigo-600"></i>
+              <span>План-график программ</span>
+            </h3>
+            <p class="text-xs text-slate-400" id="scheduleSubtitle">Загрузка…</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btnUploadSchedule" type="button" class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition">
+              <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+              <span>Загрузить план-график</span>
+            </button>
+            <input type="file" id="scheduleFileInput" accept=".xlsx" class="hidden">
+          </div>
+        </div>
+        <div id="scheduleImportResult" class="hidden px-6 py-3 border-b border-slate-100 bg-amber-50/60 text-xs text-slate-700"></div>
+        <div class="p-5 space-y-5">
+          <div id="scheduleChips" class="flex flex-wrap gap-2"></div>
+          <div id="scheduleUpcoming" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <input id="schedSearch" name="sched-q" type="search" autocomplete="off" placeholder="Название программы" aria-label="Поиск программы в план-графике" class="px-3 py-1.5 border border-slate-200 rounded-xl text-xs w-56 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <select id="schedType" aria-label="Вид программы" class="px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-semibold bg-white">
+              <option value="all">Все виды</option>
+              <option value="pk">ДПП ПК</option>
+              <option value="seminar">Семинары</option>
+              <option value="training">Тренинги</option>
+              <option value="distant">Дистанционные</option>
+            </select>
+            <select id="schedMode" aria-label="Формат: очно или дистанционно" class="px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-semibold bg-white">
+              <option value="all">Любой формат</option>
+              <option value="inperson">Очные</option>
+              <option value="distant">Дистанционные</option>
+            </select>
+            <select id="schedStatus" aria-label="Статус группы" class="px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-semibold bg-white">
+              <option value="all">Все статусы</option>
+              <option value="planned">Запланированы</option>
+              <option value="running">Идут</option>
+              <option value="finished">Завершены</option>
+              <option value="rated">Анкета получена</option>
+              <option value="no_feedback">Анкета не собрана</option>
+              <option value="cancelled">Отменены</option>
+            </select>
+            <select id="schedMonth" aria-label="Месяц" class="px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-semibold bg-white">
+              <option value="all">Весь год</option>
+              <option value="1">Январь</option><option value="2">Февраль</option><option value="3">Март</option>
+              <option value="4">Апрель</option><option value="5">Май</option><option value="6">Июнь</option>
+              <option value="7">Июль</option><option value="8">Август</option><option value="9">Сентябрь</option>
+              <option value="10">Октябрь</option><option value="11">Ноябрь</option><option value="12">Декабрь</option>
+            </select>
+            <span id="scheduleCount" class="text-[11px] text-slate-400"></span>
+          </div>
+
+          <div id="scheduleLegend" class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-500"></div>
+          <div id="scheduleGantt" class="border border-slate-200 rounded-2xl overflow-hidden"></div>
+        </div>
+      </div>
+
+      <!-- ШЕСТОЙ РЯД: РЕЙТИНГ ПРОГРАММ ПО АНКЕТАМ -->
+      <div class="bg-white rounded-[24px] border border-slate-200/80 shadow-xs overflow-hidden" id="blockRating">
+        <div class="px-6 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+              <i data-lucide="award" class="w-4 h-4 text-indigo-600"></i>
+              <span>Рейтинг программ по анкетам обратной связи</span>
+            </h3>
+            <p class="text-xs text-slate-400" id="ratingSubtitle">Загрузка…</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="btnScanFeedback" type="button" class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              <span>Обновить из папки</span>
+            </button>
+            <button id="btnUploadFeedback" type="button" class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition">
+              <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
+              <span>Загрузить анкету</span>
+            </button>
+            <input type="file" id="feedbackFileInput" accept=".xlsx" class="hidden">
+            <a href="/api/export/ratings" class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              <span>Скачать рейтинг</span>
+            </a>
+          </div>
+        </div>
+        <div class="p-5 space-y-5">
+          <div id="ratingSourceBanner" class="hidden"></div>
+          <div id="ratingTabs" class="flex flex-wrap gap-1.5 text-xs font-semibold">
+            <button type="button" data-rtype="all" class="rating-tab px-3 py-1.5 rounded-xl border bg-indigo-50 text-indigo-700 border-indigo-200">Все</button>
+            <button type="button" data-rtype="pk" class="rating-tab px-3 py-1.5 rounded-xl border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">ДПП ПК</button>
+            <button type="button" data-rtype="seminar" class="rating-tab px-3 py-1.5 rounded-xl border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">Семинары</button>
+            <button type="button" data-rtype="training" class="rating-tab px-3 py-1.5 rounded-xl border bg-white text-slate-600 border-slate-200 hover:bg-slate-50">Тренинги</button>
+            <select id="ratingMode" aria-label="Формат: очно или дистанционно" class="px-2.5 py-1.5 border border-slate-200 rounded-xl text-xs font-semibold bg-white">
+              <option value="all">Любой формат</option>
+              <option value="inperson">Очные</option>
+              <option value="distant">Дистанционные</option>
+            </select>
+          </div>
+
+          <div class="overflow-x-auto rounded-2xl border border-slate-200">
+            <table class="w-full text-left text-xs text-slate-700">
+              <thead class="bg-slate-50 text-[11px] uppercase font-bold text-slate-400 border-b border-slate-100">
+                <tr>
+                  <th class="px-3 py-3" title="Место среди программ того же вида">Место</th>
+                  <th class="px-3 py-3">Программа</th>
+                  <th class="px-3 py-3">Вид</th>
+                  <th class="px-3 py-3">Групп</th>
+                  <th class="px-3 py-3">Анкет / слушателей</th>
+                  <th class="px-3 py-3">Удовлетворённость</th>
+                  <th class="px-3 py-3">Балл (из 5)</th>
+                  <th class="px-3 py-3">Слабое место</th>
+                  <th class="px-3 py-3">Тренд</th>
+                </tr>
+              </thead>
+              <tbody id="ratingTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+          <p class="text-[11px] text-slate-400">Удовлетворённость считается по числу оценок 1–5: сумма оценок ÷ (5 × число ответов). В рейтинг попадают программы минимум с 5 анкетами; рейтинг строится отдельно по видам программ.</p>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div>
+              <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2.5">Сигналы</h4>
+              <div id="ratingSignals" class="space-y-1.5"></div>
+            </div>
+            <div>
+              <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2.5">Темы из комментариев</h4>
+              <div id="ratingThemes" class="space-y-2"></div>
+            </div>
+          </div>
+
+          <details id="ratingFilesBox" class="rounded-2xl border border-slate-200">
+            <summary class="px-4 py-3 text-xs font-bold text-slate-700 cursor-pointer select-none" id="ratingFilesSummary">Файлы анкет</summary>
+            <div id="ratingFiles" class="px-4 pb-4 space-y-2"></div>
+          </details>
+        </div>
+      </div>
+
+      <!-- СЕДЬМОЙ РЯД: КУРАТОРЫ — НАГРУЗКА И РЕЙТИНГ (только администратор) -->
+      <div class="bg-white rounded-[24px] border border-slate-200/80 shadow-xs overflow-hidden" id="blockCurators">
+        <div class="px-6 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+              <i data-lucide="users" class="w-4 h-4 text-indigo-600"></i>
+              <span>Кураторы: нагрузка и рейтинг</span>
+            </h3>
+            <p class="text-xs text-slate-400" id="curatorsSubtitle">Раздел виден администратору</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2" id="curatorsActions">
+            <button id="btnRefreshCurators" type="button" class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              <span>Обновить из таблицы</span>
+            </button>
+            <button id="btnUploadCurators" type="button" class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition">
+              <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
+              <span>Загрузить таблицу файлом</span>
+            </button>
+            <input type="file" id="curatorsFileInput" accept=".xlsx" class="hidden">
+            <button id="btnUploadStatus" type="button" class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition">
+              <i data-lucide="file-plus" class="w-3.5 h-3.5"></i>
+              <span>Загрузить статусы</span>
+            </button>
+            <input type="file" id="statusFileInput" accept=".xlsx" class="hidden">
+            <a href="/api/export/curators" class="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              <span>Скачать</span>
+            </a>
+          </div>
+        </div>
+        <div id="curatorsBody" class="p-5 space-y-6"></div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <!-- ================= МОДАЛЬНЫЕ ОКНА ================= -->
+
+  <!-- 1. ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ И УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ -->
+  <div id="modalAccount" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-[24px] max-w-md w-full p-6 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-extrabold text-slate-900">Профиль</h3>
+        <button class="close-modal text-slate-400 hover:text-slate-600 text-xl font-bold" aria-label="Закрыть окно">&times;</button>
+      </div>
+      <div id="accountBody"></div>
+    </div>
+  </div>
+
+  <div id="modalUsers" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-[24px] max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-extrabold text-slate-900">Пользователи и роли</h3>
+        <button class="close-modal text-slate-400 hover:text-slate-600 text-xl font-bold" aria-label="Закрыть окно">&times;</button>
+      </div>
+      <div id="usersBody"></div>
+    </div>
+  </div>
+
+  <!-- 2. МОДАЛКА РУЧНОЙ КОРРЕКТИРОВКИ -->
+  <div id="modalOverride" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-[24px] max-w-md w-full p-6 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+          <span>✏️ Корректировка показателя</span>
+        </h3>
+        <button class="close-modal text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+      <p class="text-xs text-slate-500 mb-4">Изменение значения в срезе с записью в аудит</p>
+      
+      <form id="overrideForm" class="space-y-3.5">
+        <input type="hidden" id="overrideKey">
+        
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 text-xs space-y-1">
+          <div class="flex justify-between"><span class="text-slate-400">Показатель:</span> <strong id="overrideIndicatorTitle" class="text-slate-800">—</strong></div>
+          <div class="flex justify-between"><span class="text-slate-400">Срез:</span> <span id="overrideSnapshotDate" class="font-bold text-slate-700">—</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Текущий факт:</span> <span id="overrideCurrentVal" class="font-bold text-indigo-600">—</span></div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Новое значение (чел.)</label>
+          <input type="number" id="overrideNewValue" required min="0" step="1" class="w-full px-3.5 py-2 text-sm font-bold border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Причина изменения (аудит)</label>
+          <input type="text" id="overrideNote" required placeholder="Например: Уточнение по слайду отчета" class="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Автор изменения</label>
+          <input type="text" id="overrideAuthor" value="Администратор" required class="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="button" class="close-modal w-1/2 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">Отмена</button>
+          <button type="submit" class="w-1/2 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. МОДАЛКА ЖУРНАЛА АУДИТА -->
+  <div id="modalAuditLog" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-[24px] max-w-4xl w-full max-h-[85vh] flex flex-col p-6 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center pb-4 border-b border-slate-100">
+        <div>
+          <h3 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+            <i data-lucide="history" class="w-5 h-5 text-indigo-600"></i>
+            <span>Журнал аудита изменений</span>
+          </h3>
+          <p class="text-xs text-slate-400">Кто, когда, что изменил и с какого значения</p>
+        </div>
+        <button class="close-modal text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto py-4">
+        <table class="w-full text-left text-xs text-slate-700">
+          <thead class="bg-slate-50 text-[11px] uppercase font-bold text-slate-400 sticky top-0">
+            <tr>
+              <th class="px-4 py-2.5">Дата и время</th>
+              <th class="px-4 py-2.5">Срез</th>
+              <th class="px-4 py-2.5">Показатель</th>
+              <th class="px-4 py-2.5">Было</th>
+              <th class="px-4 py-2.5">Стало</th>
+              <th class="px-4 py-2.5">Автор</th>
+              <th class="px-4 py-2.5">Примечание</th>
+            </tr>
+          </thead>
+          <tbody id="auditTableBody" class="divide-y divide-slate-100">
+            <!-- Наполняется в app.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex justify-end">
+        <button class="close-modal px-4 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+          Закрыть
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. МОДАЛКА ФИКСАЦИИ СРЕЗА -->
+  <div id="modalNewSnapshot" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-[24px] max-w-lg w-full p-6 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+          <i data-lucide="plus-circle" class="w-5 h-5 text-indigo-600"></i>
+          <span>Зафиксировать срез недели</span>
+        </h3>
+        <button class="close-modal text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+      <p class="text-xs text-slate-500 mb-4">Создание среза на выбранную дату планёрки</p>
+      
+      <form id="newSnapshotForm" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Дата среза</label>
+          <input type="date" id="newSnapshotDate" required class="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Госзадание</label>
+            <input type="number" id="newGzFact" placeholder="1993" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-xl">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">МФЦ МО</label>
+            <input type="number" id="newMfcFact" placeholder="273" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-xl">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">КВЦ</label>
+            <input type="number" id="newKvcFact" placeholder="1599" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-xl">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">ОМСУ</label>
+            <input type="number" id="newOmsuFact" placeholder="276" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-xl">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Примечание к срезу</label>
+          <input type="text" id="newSnapshotNote" placeholder="Срез перед планёркой в среду" class="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl">
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="button" class="close-modal w-1/2 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">Отмена</button>
+          <button type="submit" class="w-1/2 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition">Создать</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. МОДАЛКА ЗАГРУЗКИ EXCEL -->
+  <div id="modalUploadExcel" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-[24px] max-w-md w-full p-6 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+          <i data-lucide="upload-cloud" class="w-5 h-5 text-indigo-600"></i>
+          <span>Загрузка Excel</span>
+        </h3>
+        <button class="close-modal text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+      <p class="text-xs text-slate-500 mb-4">
+        Запасной вариант импорта данных из файла «План-факт 2026.xlsx»
+      </p>
+
+      <form id="uploadExcelForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Дата фиксируемого среза</label>
+          <input type="date" id="uploadDate" required class="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl">
+        </div>
+
+        <div class="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:border-indigo-500 transition cursor-pointer bg-slate-50/50" id="dropZone">
+          <i data-lucide="file-up" class="mx-auto h-8 w-8 text-indigo-500 mb-2"></i>
+          <p class="text-xs text-slate-600 font-semibold mb-1">Нажмите или перетащите файл Excel (.xlsx, .xls)</p>
+          <span id="fileNameDisplay" class="text-xs font-bold text-indigo-600">Файл не выбран</span>
+          <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden" required>
+        </div>
+
+        <button type="submit" id="btnSubmitUpload" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition">
+          Импортировать в дашборд
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= ПЛАВАЮЩИЙ ВИДЖЕТ ИИ-ПОМОЩНИКА GIGACHAT ================= -->
+  <div id="aiChatWidget" class="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
+    
+    <!-- Панель окна чата (скрыта по умолчанию) -->
+    <div id="aiChatBox" class="pointer-events-auto hidden w-[390px] sm:w-[440px] max-w-[94vw] h-[580px] max-h-[82vh] bg-white rounded-[28px] shadow-2xl border border-slate-200/90 flex flex-col overflow-hidden mb-3.5 transition-all transform duration-300">
+      
+      <!-- Шапка окна чата -->
+      <div class="p-4 px-5 bg-gradient-to-r from-indigo-700 via-indigo-600 to-purple-700 text-white flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="relative shrink-0">
+            <img src="assets/boris-face.webp?v=2" alt="Учёный кот Борис AI" class="boris-avatar w-11 h-11 rounded-full object-cover ring-2 ring-white/70 shadow-lg">
+            <span class="live-dot absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-indigo-600"></span>
+          </div>
+          <div>
+            <div class="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+              <h3 class="text-sm font-extrabold leading-tight whitespace-nowrap">Учёный кот Борис <span class="text-amber-300">AI</span></h3>
+              <span id="chatStatusPill" class="whitespace-nowrap text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-400/25 text-emerald-200 border border-emerald-400/30">
+                GigaChat AI
+              </span>
+            </div>
+            <p class="text-[10px] text-indigo-100">Знает цифры среза, соберёт отчёт и выгрузит Excel</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-1.5">
+          <!-- Кнопка настроек ключа GigaChat -->
+          <button id="btnChatSettings" class="w-7 h-7 rounded-lg hover:bg-white/15 flex items-center justify-center text-white/80 hover:text-white transition" title="Настройки API GigaChat">
+            <i data-lucide="settings" class="w-4 h-4"></i>
+          </button>
+          <!-- Кнопка очистки -->
+          <button id="btnChatClear" class="w-7 h-7 rounded-lg hover:bg-white/15 flex items-center justify-center text-white/80 hover:text-white transition" title="Очистить переписку">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+          <!-- Кнопка закрытия -->
+          <button id="btnChatClose" class="w-7 h-7 rounded-lg hover:bg-white/15 flex items-center justify-center text-white/80 hover:text-white transition" title="Свернуть">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Всплывающий блок настроек ключа GigaChat -->
+      <div id="chatSettingsPanel" class="hidden p-3.5 bg-slate-50 border-b border-slate-200 text-xs">
+        <div class="flex justify-between items-center mb-1.5">
+          <span class="font-bold text-slate-800">Настройка GigaChat API</span>
+          <span id="keyStatusBadge" class="text-[10px] text-slate-500">Проверка...</span>
+        </div>
+        <p class="text-[10px] text-slate-500">
+          Ключ (Authorization Key) задаётся только на сервере: переменная окружения <span class="font-mono">GIGACHAT_CREDENTIALS</span> или строка <span class="font-mono">GIGACHAT_CREDENTIALS=…</span> в файле <span class="font-mono">.env</span> рядом с server.js. После изменения перезапустите сервер.
+        </p>
+      </div>
+
+      <!-- Список сообщений -->
+      <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 text-xs">
+        
+        <!-- Приветственное сообщение -->
+        <div class="boris-card relative overflow-hidden rounded-2xl border border-indigo-200/60 bg-indigo-50/40">
+          <img src="assets/boris.webp?v=2" alt="Учёный кот Борис AI читает книгу, из которой поднимается светящаяся нейросеть" class="w-full h-44 object-cover object-[50%_28%]">
+          <div class="absolute inset-x-0 bottom-0 p-3 pt-10 bg-gradient-to-t from-slate-900/80 to-transparent text-white">
+            <div class="text-sm font-extrabold leading-tight">Учёный кот Борис AI</div>
+            <div class="text-[10px] text-indigo-100">Большие идеи начинаются с людей</div>
+          </div>
+        </div>
+        <div class="flex items-start gap-2.5">
+          <img src="assets/boris-face-sm.webp?v=2" alt="" class="boris-avatar w-7 h-7 rounded-full object-cover shrink-0 ring-1 ring-indigo-200">
+          <div class="bg-slate-100/90 rounded-2xl rounded-tl-sm p-3.5 text-slate-800 max-w-[85%] space-y-2">
+            <p>
+              Мурр, здравствуйте! Я Учёный кот Борис AI, помощник учебного отдела. Знаю все цифры текущего среза и источники данных, могу выгрузить отчёт и написать сообщение руководителю: какие программы идут и сколько на них людей.
+            </p>
+            <p class="text-[11px] text-slate-500">
+              Нажмите на готовый запрос ниже или спросите своими словами:
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Быстрые вопросы-подсказки (Chips) -->
+      <div class="px-3 py-2 bg-slate-50/80 border-t border-slate-100 flex items-center gap-1.5 overflow-x-auto text-[11px]">
+        <button class="ai-prompt-chip whitespace-nowrap px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold transition shadow-2xs" data-prompt="Сформируй тезисы к планёрке">
+          📋 Тезисы к планёрке
+        </button>
+        <button class="ai-prompt-chip whitespace-nowrap px-2.5 py-1 rounded-xl bg-white hover:bg-indigo-50 hover:text-indigo-700 border border-slate-200 font-semibold text-slate-600 transition shadow-2xs" data-prompt="Срочно ответить руководителю: напиши смс, какие программы сейчас идут и сколько людей на них">
+          Сообщение руководителю
+        </button>
+        <button class="ai-prompt-chip whitespace-nowrap px-2.5 py-1 rounded-xl bg-white hover:bg-indigo-50 hover:text-indigo-700 border border-slate-200 font-semibold text-slate-600 transition shadow-2xs" data-prompt="Хочу посмотреть КВЦ">
+          🔍 КВЦ
+        </button>
+        <button class="ai-prompt-chip whitespace-nowrap px-2.5 py-1 rounded-xl bg-white hover:bg-indigo-50 hover:text-indigo-700 border border-slate-200 font-semibold text-slate-600 transition shadow-2xs" data-prompt="Покажи МФЦ за прошлую неделю">
+          📅 МФЦ за прошлую неделю
+        </button>
+        <button class="ai-prompt-chip whitespace-nowrap px-2.5 py-1 rounded-xl bg-white hover:bg-indigo-50 hover:text-indigo-700 border border-slate-200 font-semibold text-slate-600 transition shadow-2xs" data-prompt="Выгрузи всё в Excel">
+          📥 Выгрузи в Excel
+        </button>
+      </div>
+
+      <!-- Поле ввода вопроса -->
+      <form id="aiChatForm" class="p-3 bg-white border-t border-slate-100 flex items-center gap-2">
+        <input type="text" id="aiChatInput" placeholder="Напишите ваш вопрос (например: Хочу посмотреть КВЦ)..." 
+               class="flex-1 px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+        <button type="submit" id="aiChatSubmitBtn" class="w-9 h-9 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition shadow-md shadow-indigo-500/20 disabled:opacity-50">
+          <i data-lucide="send" class="w-4 h-4"></i>
+        </button>
+      </form>
+
+    </div>
+
+    <!-- Кнопка-триггер в правом нижнем углу -->
+    <button id="aiChatToggleBtn" aria-label="Открыть чат: Учёный кот Борис AI" class="pointer-events-auto flex items-center gap-2.5 pl-2.5 pr-4 py-2 rounded-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 text-white font-bold text-xs shadow-2xl shadow-indigo-600/40 hover:scale-105 active:scale-95 transition-all">
+      <div class="relative">
+        <img src="assets/boris-face-sm.webp?v=2" alt="" class="boris-avatar w-9 h-9 rounded-full object-cover ring-2 ring-white/70">
+        <span class="live-dot absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-indigo-700"></span>
+      </div>
+      <span>Учёный кот Борис <span class="text-amber-300">AI</span></span>
+    </button>
+
+  </div>
+
+  <!-- ================= НОВЫЕ МОДАЛЬНЫЕ ОКНА ================= -->
+
+  <!-- 6. МОДАЛКА УСТАНОВКИ ОРИЕНТИРА / ПЛАНА (ДЛЯ ОМСУ И ИТОГА) -->
+  <div id="modalIndicatorPlan" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-[24px] max-w-md w-full p-6 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+          <span>🎯 Установка планового ориентира</span>
+        </h3>
+        <button class="close-modal text-slate-400 hover:text-slate-600 text-xl font-bold" aria-label="Закрыть окно">&times;</button>
+      </div>
+      <p class="text-xs text-slate-500 mb-4">
+        Задайте годовой ориентир для расчета процента исполнения, полосы прогресса и нужного темпа.
+      </p>
+
+      <form id="indicatorPlanForm" class="space-y-3.5">
+        <input type="hidden" id="planTargetKey">
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 text-xs">
+          <div class="flex justify-between"><span class="text-slate-400">Показатель:</span> <strong id="planIndicatorTitle" class="text-slate-800">—</strong></div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Годовой ориентир (чел.)</label>
+          <input type="number" id="planValueInput" placeholder="Например: 350" min="1" step="1" class="w-full px-3.5 py-2 text-sm font-bold border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          <p class="text-[10px] text-slate-400 mt-1">Оставьте пустым, чтобы сбросить норматив.</p>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="button" class="close-modal w-1/2 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">Отмена</button>
+          <button type="submit" class="w-1/2 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 7. МОДАЛКА ПЛАНА ДЕЙСТВИЙ И КОММЕНТАРИЕВ К СРЕЗУ -->
+  <div id="modalActionPlan" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-[24px] max-w-lg w-full p-6 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+          <span>📝 Комментарий и план действий по направлению</span>
+        </h3>
+        <button class="close-modal text-slate-400 hover:text-slate-600 text-xl font-bold" aria-label="Закрыть окно">&times;</button>
+      </div>
+      <p class="text-xs text-slate-500 mb-4">
+        Фиксация причин отставания, управленческих решений, ответственного и сроков к планёрке.
+      </p>
+
+      <form id="actionPlanForm" class="space-y-3">
+        <input type="hidden" id="actionPlanKey">
+        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs flex justify-between">
+          <span class="text-slate-500">Направление:</span>
+          <strong id="actionPlanTitle" class="text-slate-800">—</strong>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 mb-1">Причина отставания</label>
+          <textarea id="actionReason" rows="2" placeholder="Например: Задержка согласования списков со стороны ведомств..." class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 mb-1">Управленческое решение</label>
+          <textarea id="actionSolution" rows="2" placeholder="Например: Запуск 2 дополнительных потоков ускоренного набора..." class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Ответственный</label>
+            <input type="text" id="actionAssignee" placeholder="Иванов И.И." class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">Срок исполнения</label>
+            <input type="date" id="actionDeadline" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="button" class="close-modal w-1/2 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">Отмена</button>
+          <button type="submit" class="w-1/2 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 8. МОДАЛКА ПОМЕСЯЧНОЙ РАЗБИВКИ И СРАВНЕНИЯ С 2025 ГОДОМ -->
+  <div id="modalMonthlyAndYoY" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-[24px] max-w-4xl w-full max-h-[88vh] flex flex-col p-6 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center pb-4 border-b border-slate-100">
+        <div>
+          <h3 class="text-base lg:text-lg font-extrabold text-slate-900 flex items-center gap-2">
+            <i data-lucide="bar-chart-2" class="w-5 h-5 text-indigo-600"></i>
+            <span>Помесячный план/факт и сравнение с 2025 годом</span>
+          </h3>
+          <p class="text-xs text-slate-400">Сезонная разбивка плановых объемов и динамика год к году (YoY)</p>
+        </div>
+        <button class="close-modal text-slate-400 hover:text-slate-600 text-xl font-bold" aria-label="Закрыть окно">&times;</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto py-4 space-y-6">
+        <!-- Сравнение с прошлым годом -->
+        <div>
+          <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2.5">
+            Сравнение на ту же дату: 05.10.2026 vs 05.10.2025
+          </h4>
+          <div id="yoyCardsGrid" class="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <!-- Генерируется в app.js -->
+          </div>
+        </div>
+
+        <!-- Помесячная таблица план/факт -->
+        <div>
+          <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2.5">
+            Исполнение плана по месяцам (чел.)
+          </h4>
+          <div class="overflow-x-auto rounded-2xl border border-slate-200">
+            <table class="w-full text-left text-xs text-slate-700" id="monthlyBreakdownTable">
+              <!-- Наполняется в app.js -->
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9b. МОДАЛКА: СТАТУС ДАШБОРДА НА ТЕКУЩИЙ МОМЕНТ -->
+  <div id="modalDashStatus" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-[24px] max-w-4xl w-full max-h-[88vh] flex flex-col p-6 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-start gap-4 pb-4 border-b border-slate-100">
+        <div>
+          <h3 class="text-base lg:text-lg font-extrabold text-slate-900">Статус дашборда на текущий момент</h3>
+          <p id="dashStatusSubtitle" class="text-xs text-slate-400">Загрузка…</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnDashCollect" type="button" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition" title="Собрать данные из всех источников прямо сейчас (администратор)">Обновить сейчас</button>
+          <button class="close-modal text-slate-400 hover:text-slate-600 text-xl font-bold" aria-label="Закрыть окно">&times;</button>
+        </div>
+      </div>
+      <div id="dashStatusBody" class="flex-1 overflow-y-auto py-4"></div>
+    </div>
+  </div>
+
+  <!-- 9a. МОДАЛКА: СТАТУСЫ ПО ПРОГРАММАМ ПО НЕДЕЛЯМ -->
+  <div id="modalStatusWeeks" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-[24px] max-w-4xl w-full max-h-[88vh] flex flex-col p-6 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-start gap-4 pb-4 border-b border-slate-100">
+        <div>
+          <h3 class="text-base lg:text-lg font-extrabold text-slate-900">Статусы по программам по неделям</h3>
+          <p class="text-xs text-slate-400">Динамика по датам планёрок: КВЦ, госзадание (дистант и очно), МФЦ</p>
+        </div>
+        <button class="close-modal text-slate-400 hover:text-slate-600 text-xl font-bold" aria-label="Закрыть окно">&times;</button>
+      </div>
+      <div id="statusWeeksBody" class="flex-1 overflow-y-auto py-4"></div>
+    </div>
+  </div>
+
+  <!-- 9. МОДАЛКА КАРТОЧКИ ПРОГРАММЫ (ГРУППЫ, ПАРАМЕТРЫ, АНКЕТЫ) -->
+  <div id="modalProgram" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-[24px] max-w-4xl w-full max-h-[88vh] flex flex-col p-6 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-start gap-4 pb-4 border-b border-slate-100">
+        <div id="programModalHead" class="min-w-0"></div>
+        <button class="close-modal text-slate-400 hover:text-slate-600 text-xl font-bold" aria-label="Закрыть окно">&times;</button>
+      </div>
+      <div id="programModalBody" class="flex-1 overflow-y-auto py-4 space-y-6"></div>
+    </div>
+  </div>
+
+  <script src="motion.js"></script>
+  <script src="app.js"></script>
+  <script src="statuses.js"></script>
+  <script src="structure.js"></script>
+  <script src="programs.js"></script>
+  <script src="curators.js"></script>
+  <script src="dashstatus.js"></script>
+<script>
+  (function () {
+    var btn = document.getElementById('btnThemeToggle');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var dark = document.documentElement.classList.toggle('dark');
+      try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch (e) {}
+      // график перерисовывается целиком: сетка, подписи, заливка и подсказки зависят от темы
+      if (typeof loadHistoryChart === 'function') loadHistoryChart();
+    });
+  })();
+</script>
+</body>
+</html>
